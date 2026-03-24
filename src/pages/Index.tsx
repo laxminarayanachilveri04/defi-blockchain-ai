@@ -6,22 +6,24 @@ import { Button } from '@/components/ui/button'
 import ConnectWallet from '@/components/ConnectWallet'
 import AlertsList from '@/components/AlertsList'
 import StatsCard from '@/components/StatsCard'
+import { useDemoWallet } from '@/hooks/useDemoWallet'
 
 const Index = () => {
   const { activeAddress } = useWallet()
+  const { demoAddress, connectDemo, disconnectDemo, isDemoMode } = useDemoWallet()
   const [openWalletModal, setOpenWalletModal] = useState(false)
   const [alerts, setAlerts] = useState<string[]>([])
   const [isMonitoring, setIsMonitoring] = useState(false)
   const [scanCount, setScanCount] = useState(0)
 
-  const truncateAddress = (addr: string) =>
-    `${addr.slice(0, 6)}...${addr.slice(-4)}`
+  const effectiveAddress = activeAddress || demoAddress
+
+  const truncateAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`
 
   const runMonitoring = async () => {
-    if (!activeAddress) return
+    if (!effectiveAddress) return
     setIsMonitoring(true)
 
-    // Simulated monitoring - replace with real contract client calls
     try {
       await new Promise((r) => setTimeout(r, 1500))
       const score = Math.floor(Math.random() * 20)
@@ -44,7 +46,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
@@ -55,19 +56,19 @@ const Index = () => {
           </div>
 
           <Button
-            variant={activeAddress ? 'outline' : 'wallet'}
+            variant={effectiveAddress ? 'outline' : 'wallet'}
             size="sm"
             onClick={() => setOpenWalletModal(true)}
           >
             <Wallet className="h-4 w-4" />
-            {activeAddress ? truncateAddress(activeAddress) : 'Connect Wallet'}
+            {effectiveAddress
+              ? `${isDemoMode ? '🧪 ' : ''}${truncateAddress(effectiveAddress)}`
+              : 'Connect Wallet'}
           </Button>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        {/* Hero */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -82,49 +83,27 @@ const Index = () => {
           </p>
         </motion.div>
 
-        {/* Stats */}
         <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <StatsCard
-            title="Scans Run"
-            value={scanCount}
-            subtitle="Total monitoring scans"
-            icon={BarChart3}
-            delay={0.1}
-          />
-          <StatsCard
-            title="Alerts"
-            value={alerts.length}
-            subtitle="Total alerts generated"
-            icon={Activity}
-            delay={0.2}
-          />
+          <StatsCard title="Scans Run" value={scanCount} subtitle="Total monitoring scans" icon={BarChart3} delay={0.1} />
+          <StatsCard title="Alerts" value={alerts.length} subtitle="Total alerts generated" icon={Activity} delay={0.2} />
           <StatsCard
             title="Status"
-            value={activeAddress ? 'Connected' : 'Disconnected'}
-            subtitle={activeAddress ? 'Wallet active' : 'Connect to start'}
+            value={effectiveAddress ? (isDemoMode ? 'Demo' : 'Connected') : 'Disconnected'}
+            subtitle={effectiveAddress ? (isDemoMode ? 'Demo mode active' : 'Wallet active') : 'Connect to start'}
             icon={Zap}
             delay={0.3}
           />
         </div>
 
-        {/* Action + Alerts */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Controls */}
           <div className="lg:col-span-1">
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Controls
-              </h2>
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={runMonitoring}
-                disabled={!activeAddress || isMonitoring}
-              >
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Controls</h2>
+              <Button className="w-full" size="lg" onClick={runMonitoring} disabled={!effectiveAddress || isMonitoring}>
                 <Play className="h-4 w-4" />
                 {isMonitoring ? 'Scanning...' : 'Run Monitoring'}
               </Button>
-              {!activeAddress && (
+              {!effectiveAddress && (
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   Connect your wallet to start monitoring
                 </p>
@@ -132,18 +111,12 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Alerts */}
           <div className="lg:col-span-2">
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Alerts
-                </h2>
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Alerts</h2>
                 {alerts.length > 0 && (
-                  <button
-                    onClick={() => setAlerts([])}
-                    className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-                  >
+                  <button onClick={() => setAlerts([])} className="text-xs text-muted-foreground transition-colors hover:text-foreground">
                     Clear all
                   </button>
                 )}
@@ -154,8 +127,13 @@ const Index = () => {
         </div>
       </main>
 
-      {/* Wallet Modal */}
-      <ConnectWallet open={openWalletModal} onClose={() => setOpenWalletModal(false)} />
+      <ConnectWallet
+        open={openWalletModal}
+        onClose={() => setOpenWalletModal(false)}
+        onDemoConnect={connectDemo}
+        onDemoDisconnect={disconnectDemo}
+        isDemoMode={isDemoMode}
+      />
     </div>
   )
 }
