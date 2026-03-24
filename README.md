@@ -173,5 +173,5 @@ This project is licensed under the MIT License.
 
 📬 Contact
 Your Name
-Email: your-email@example.com
-GitHub: https://github.com/your-username
+Email: nanu2005hyd@gmail.com
+GitHub: laxminarayanachilveri04
