@@ -1,36 +1,40 @@
 import { useState } from 'react'
 import { useWallet } from '@txnlab/use-wallet-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Wallet, X } from 'lucide-react'
+import { Wallet, X, FlaskConical } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface ConnectWalletProps {
   open: boolean
   onClose: () => void
+  onDemoConnect?: () => void
+  isDemoMode?: boolean
+  onDemoDisconnect?: () => void
 }
 
-const ConnectWallet: React.FC<ConnectWalletProps> = ({ open, onClose }) => {
+const ConnectWallet: React.FC<ConnectWalletProps> = ({
+  open,
+  onClose,
+  onDemoConnect,
+  isDemoMode,
+  onDemoDisconnect,
+}) => {
   const { wallets, activeAddress } = useWallet()
   const [pendingWalletKey, setPendingWalletKey] = useState<string | null>(null)
 
   const truncateAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`
 
   const getReadableError = (message: string, walletName: string) => {
-    if (/not available/i.test(message)) {
+    if (/not available/i.test(message))
       return `${walletName} isn't available on this device. Install/enable it, then try again.`
-    }
-
-    if (/user rejected|cancelled|canceled/i.test(message)) {
+    if (/user rejected|cancelled|canceled/i.test(message))
       return 'Connection was cancelled.'
-    }
-
     return message || `Failed to connect to ${walletName}.`
   }
 
   const handleWalletClick = async (wallet: (typeof wallets)[number]) => {
     const walletName = wallet.metadata?.name || wallet.id
     setPendingWalletKey(wallet.walletKey)
-
     try {
       if (wallet.isConnected) {
         await wallet.disconnect()
@@ -49,6 +53,19 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ open, onClose }) => {
       setPendingWalletKey(null)
     }
   }
+
+  const handleDemoToggle = () => {
+    if (isDemoMode) {
+      onDemoDisconnect?.()
+      toast.success('Demo wallet disconnected')
+    } else {
+      onDemoConnect?.()
+      toast.success('Demo wallet connected')
+      onClose()
+    }
+  }
+
+  const displayAddress = activeAddress || (isDemoMode ? 'DEMO7I...PQHTQ' : null)
 
   return (
     <AnimatePresence>
@@ -74,7 +91,7 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ open, onClose }) => {
                   <Wallet className="h-5 w-5 text-primary" />
                 </div>
                 <h2 className="text-lg font-semibold text-foreground">
-                  {activeAddress ? 'Wallet Connected' : 'Connect Wallet'}
+                  {displayAddress ? 'Wallet Connected' : 'Connect Wallet'}
                 </h2>
               </div>
               <button
@@ -85,23 +102,55 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ open, onClose }) => {
               </button>
             </div>
 
-            {activeAddress && (
+            {displayAddress && (
               <div className="mb-4 rounded-xl border border-border bg-muted/50 p-4">
-                <p className="mb-1 text-xs font-medium text-muted-foreground">Active Address</p>
-                <p className="font-mono text-sm text-foreground">{truncateAddress(activeAddress)}</p>
+                <p className="mb-1 text-xs font-medium text-muted-foreground">
+                  Active Address {isDemoMode && '(Demo)'}
+                </p>
+                <p className="font-mono text-sm text-foreground">{displayAddress}</p>
               </div>
             )}
+
+            {/* Demo Mode Button */}
+            <button
+              onClick={handleDemoToggle}
+              className="mb-3 flex w-full items-center justify-between rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all hover:border-primary/60 hover:bg-primary/10"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
+                  <FlaskConical className="h-4 w-4 text-primary" />
+                </div>
+                <div className="text-left">
+                  <span className="font-medium text-foreground">Demo Mode</span>
+                  <p className="text-xs text-muted-foreground">
+                    Test without a real wallet
+                  </p>
+                </div>
+              </div>
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-medium ${
+                  isDemoMode ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {isDemoMode ? 'Disconnect' : 'Connect'}
+              </span>
+            </button>
+
+            <div className="mb-3 flex items-center gap-2">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-xs text-muted-foreground">or use a real wallet</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
 
             <div className="space-y-2">
               {wallets.map((wallet) => {
                 const isPending = pendingWalletKey === wallet.walletKey
-
                 return (
                   <button
                     key={wallet.walletKey}
                     onClick={() => void handleWalletClick(wallet)}
-                    disabled={isPending}
-                    className="flex w-full items-center justify-between rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-70"
+                    disabled={isPending || isDemoMode}
+                    className="flex w-full items-center justify-between rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <div className="flex items-center gap-3">
                       {wallet.metadata?.icon && (
@@ -118,7 +167,7 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ open, onClose }) => {
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-medium ${
                         wallet.isConnected
-                          ? 'bg-success/10 text-success'
+                          ? 'bg-green-500/10 text-green-600'
                           : 'bg-muted text-muted-foreground'
                       }`}
                     >
