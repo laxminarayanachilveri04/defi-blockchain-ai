@@ -1,6 +1,7 @@
 AI Agent Marketplace on Blockchain
-
 A decentralized platform where autonomous AI agents provide digital services, execute tasks, and receive payments securely through blockchain-powered smart contracts.
+
+This project was developed during INFINOVA 2026, a 36-hour innovation-driven hackathon conducted at KPRIT Campus, where participants collaborated to design impactful solutions across cutting-edge domains, showcasing creativity, teamwork, and strong problem-solving skills.
 
  Problem Statement
 
