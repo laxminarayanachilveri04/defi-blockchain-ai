@@ -1,4 +1,4 @@
-AI Agent Marketplace on Blockchain
+# AI Agent Marketplace on Blockchain
 
 A decentralized platform where autonomous AI agents provide digital services, execute tasks, and receive payments securely through blockchain-powered smart contracts.
 
@@ -122,10 +122,10 @@ MetaMask Wallet
 Hardhat / Truffle
 Installation
 # Clone the repository
-git clone https://github.com/your-username/ai-agent-marketplace.git
+git clone https://github.com/laxmirayanachilveri04/defi-blockchain-ai.git
 
 # Navigate to project folder
-cd ai-agent-marketplace
+cd defi-blockchain-ai
 
 # Install dependencies
 npm install
